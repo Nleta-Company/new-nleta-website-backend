@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model ContactEnquiry {
+  id            String   @id @default(cuid())
+  name          String
+  organization  String?
+  email         String
+  phone         String?
+  enquiryType   String @default("General Enquiry")
+  sector        String?
+  subject       String?
+  message       String
+  consent       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  status        String @default("NEW")
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("ADMIN")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+
+
+
+model Complaint {
+  id                    String   @id @default(cuid())
+  referenceNumber       String   @unique @default(cuid())
+  name                  String
+  email                 String
+  phone                 String?
+  organization          String?
+  category              String
+  relatedReference      String?
+  subject               String
+  description           String   @db.Text
+  consent               Boolean
+  status                String   @default("NEW")
+  adminNotes            String?  @db.Text
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  evidence              EvidenceFile[]
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+model IncidentReport {
+  id                    String   @id @default(cuid())
+  referenceNumber       String   @unique @default(cuid())
+  reporterName          String
+  reporterEmail         String
+  reporterPhone         String?
+  organization          String?
+  incidentType          String
+  severity              String
+  incidentDate          DateTime
+  location               String
+  description           String   @db.Text
+  injuryDetails         String?  @db.Text
+  immediateAction       String?  @db.Text
+  consent               Boolean
+  status                String   @default("NEW")
+  adminNotes            String?  @db.Text
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  evidence              EvidenceFile[]
+
+  @@index([status, createdAt])
+  @@index([incidentDate])
+  @@index([reporterEmail])
+}
+
+model EvidenceFile {
+  id                String          @id @default(cuid())
+  originalName      String
+  storageKey        String          @unique
+  mimeType          String
+  sizeBytes         Int
+  createdAt         DateTime        @default(now())
+
+  complaintId       String?
+  complaint         Complaint?      @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  incidentReportId  String?
+  incidentReport    IncidentReport? @relation(fields: [incidentReportId], references: [id], onDelete: Cascade)
+
+  @@index([complaintId])
+  @@index([incidentReportId])
+}
+
+
+
+
+enum GalleryMediaType {
+  PHOTO
+  VIDEO
+}
+
+model GalleryMedia {
+  id           String          @id @default(cuid())
+  title        String
+  type         GalleryMediaType
+  url          String
+  thumbnailUrl String?
+  storageKey   String          @unique
+  mimeType     String
+  sizeBytes    Int
+  isPublished  Boolean         @default(false)
+  uploadedById String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([isPublished, createdAt])
+  @@index([type, isPublished])
+}
