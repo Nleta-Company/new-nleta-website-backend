@@ -14,6 +14,8 @@ async function bootstrap() {
     origin: [
       'https://new-nleta-website.vercel.app',
       'http://localhost:3000',
+      'https://nleta.org.in',
+      'https://www.nleta.org.in',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
