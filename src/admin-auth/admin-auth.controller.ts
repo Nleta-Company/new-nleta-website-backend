@@ -26,7 +26,7 @@ type AdminRequest = Request & {
 
 @Controller('admin-auth')
 export class AdminAuthController {
-  constructor(private readonly adminAuthService: AdminAuthService) {}
+  constructor(private readonly adminAuthService: AdminAuthService) { }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -39,8 +39,8 @@ export class AdminAuthController {
 
     response.cookie('nleta_admin_token', result.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       path: '/',
       maxAge: 8 * 60 * 60 * 1000,
     });
@@ -65,9 +65,10 @@ export class AdminAuthController {
   logout(@Res({ passthrough: true }) response: Response) {
     response.clearCookie('nleta_admin_token', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       path: '/',
+      maxAge: 8 * 60 * 60 * 1000,
     });
 
     return {
