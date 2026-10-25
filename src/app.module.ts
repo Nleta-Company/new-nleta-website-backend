@@ -8,6 +8,7 @@ import { ContactEnquiriesModule } from './contact-enquiries/contact-enquiries.mo
 import { AdminAuthModule } from './admin-auth/admin-auth.module.js';
 import { ComplaintsModule } from './complaints/complaints.module.js';
 import { IncidentReportsModule } from './incident-reports/incident-reports.module.js';
+import { AccidentalReportsModule } from './accidental-reports/accidental-reports.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { IncidentReportsModule } from './incident-reports/incident-reports.modul
     ComplaintsModule,
     IncidentReportsModule,
     GalleryModule,
+    AccidentalReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

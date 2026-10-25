@@ -144,3 +144,44 @@ model GalleryMedia {
   @@index([isPublished, createdAt])
   @@index([type, isPublished])
 }
+
+
+enum AccidentalReportType {
+  TRAPPED
+  FATAL
+  INJURED
+  OTHER
+}
+
+enum AccidentalReportStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model AccidentalReport {
+  id            String                  @id @default(cuid())
+  date          DateTime
+  state         String
+  location      String
+  equipment     String
+  title         String
+  details       String                  @db.Text
+
+  type          AccidentalReportType
+  fatalities    Int                     @default(0)
+  injuries      Int                     @default(0)
+  trapped       Int                     @default(0)
+  other         Int                     @default(0)
+
+  sourceLink    String?
+  status        AccidentalReportStatus  @default(DRAFT)
+
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  @@index([date])
+  @@index([state, date])
+  @@index([type, date])
+  @@index([status, date])
+}
