@@ -13,28 +13,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
 model ContactEnquiry {
-  id            String   @id @default(cuid())
-  name          String
-  organization  String?
-  email         String
-  phone         String?
-  enquiryType   String @default("General Enquiry")
-  sector        String?
-  subject       String?
-  message       String
-  consent       Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  status        String @default("NEW")
+  id           String   @id @default(cuid())
+  name         String
+  organization String?
+  email        String
+  phone        String?
+  enquiryType  String   @default("General Enquiry")
+  sector       String?
+  subject      String?
+  message      String
+  consent      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  status       String   @default("NEW")
 
   @@index([email])
   @@index([createdAt])
 }
-
-
 
 model AdminUser {
   id           String   @id @default(cuid())
@@ -48,53 +44,50 @@ model AdminUser {
   @@index([isActive])
 }
 
-
-
-
 model Complaint {
-  id                    String   @id @default(cuid())
-  referenceNumber       String   @unique @default(cuid())
-  name                  String
-  email                 String
-  phone                 String?
-  organization          String?
-  category              String
-  relatedReference      String?
-  subject               String
-  description           String   @db.Text
-  consent               Boolean
-  status                String   @default("NEW")
-  adminNotes            String?  @db.Text
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id               String   @id @default(cuid())
+  referenceNumber  String   @unique @default(cuid())
+  name             String
+  email            String
+  phone            String?
+  organization     String?
+  category         String
+  relatedReference String?
+  subject          String
+  description      String   @db.Text
+  consent          Boolean
+  status           String   @default("NEW")
+  adminNotes       String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  evidence              EvidenceFile[]
+  evidence EvidenceFile[]
 
   @@index([status, createdAt])
   @@index([email])
 }
 
 model IncidentReport {
-  id                    String   @id @default(cuid())
-  referenceNumber       String   @unique @default(cuid())
-  reporterName          String
-  reporterEmail         String
-  reporterPhone         String?
-  organization          String?
-  incidentType          String
-  severity              String
-  incidentDate          DateTime
-  location               String
-  description           String   @db.Text
-  injuryDetails         String?  @db.Text
-  immediateAction       String?  @db.Text
-  consent               Boolean
-  status                String   @default("NEW")
-  adminNotes            String?  @db.Text
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id              String   @id @default(cuid())
+  referenceNumber String   @unique @default(cuid())
+  reporterName    String
+  reporterEmail   String
+  reporterPhone   String?
+  organization    String?
+  incidentType    String
+  severity        String
+  incidentDate    DateTime
+  location        String
+  description     String   @db.Text
+  injuryDetails   String?  @db.Text
+  immediateAction String?  @db.Text
+  consent         Boolean
+  status          String   @default("NEW")
+  adminNotes      String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  evidence              EvidenceFile[]
+  evidence EvidenceFile[]
 
   @@index([status, createdAt])
   @@index([incidentDate])
@@ -102,25 +95,22 @@ model IncidentReport {
 }
 
 model EvidenceFile {
-  id                String          @id @default(cuid())
-  originalName      String
-  storageKey        String          @unique
-  mimeType          String
-  sizeBytes         Int
-  createdAt         DateTime        @default(now())
+  id           String   @id @default(cuid())
+  originalName String
+  storageKey   String   @unique
+  mimeType     String
+  sizeBytes    Int
+  createdAt    DateTime @default(now())
 
-  complaintId       String?
-  complaint         Complaint?      @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  complaintId String?
+  complaint   Complaint? @relation(fields: [complaintId], references: [id], onDelete: Cascade)
 
-  incidentReportId  String?
-  incidentReport    IncidentReport? @relation(fields: [incidentReportId], references: [id], onDelete: Cascade)
+  incidentReportId String?
+  incidentReport   IncidentReport? @relation(fields: [incidentReportId], references: [id], onDelete: Cascade)
 
   @@index([complaintId])
   @@index([incidentReportId])
 }
-
-
-
 
 enum GalleryMediaType {
   PHOTO
@@ -128,23 +118,22 @@ enum GalleryMediaType {
 }
 
 model GalleryMedia {
-  id           String          @id @default(cuid())
+  id           String           @id @default(cuid())
   title        String
   type         GalleryMediaType
   url          String
   thumbnailUrl String?
-  storageKey   String          @unique
+  storageKey   String           @unique
   mimeType     String
   sizeBytes    Int
-  isPublished  Boolean         @default(false)
+  isPublished  Boolean          @default(false)
   uploadedById String?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
   @@index([isPublished, createdAt])
   @@index([type, isPublished])
 }
-
 
 enum AccidentalReportType {
   TRAPPED
@@ -160,28 +149,109 @@ enum AccidentalReportStatus {
 }
 
 model AccidentalReport {
-  id            String                  @id @default(cuid())
-  date          DateTime
-  state         String
-  location      String
-  equipment     String
-  title         String
-  details       String                  @db.Text
+  id        String   @id @default(cuid())
+  date      DateTime
+  state     String
+  location  String
+  equipment String
+  title     String
+  details   String   @db.Text
 
-  type          AccidentalReportType
-  fatalities    Int                     @default(0)
-  injuries      Int                     @default(0)
-  trapped       Int                     @default(0)
-  other         Int                     @default(0)
+  type       AccidentalReportType
+  fatalities Int                  @default(0)
+  injuries   Int                  @default(0)
+  trapped    Int                  @default(0)
+  other      Int                  @default(0)
 
-  sourceLink    String?
-  status        AccidentalReportStatus  @default(DRAFT)
+  sourceLink String?
+  status     AccidentalReportStatus @default(DRAFT)
 
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([date])
   @@index([state, date])
   @@index([type, date])
   @@index([status, date])
+}
+
+enum EmployerEnquiryStatus {
+  NEW
+  CONTACTED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+model EmployerEnquiry {
+  id              String @id @default(cuid())
+  referenceNumber String @unique @default(cuid())
+
+  // Company details
+  companyName   String
+  employerType  String
+  country       String
+  state         String?
+  city          String
+  address       String?
+  website       String?
+  agencyLicence String? @db.Text
+
+  // Contact person
+  contactName String
+  designation String
+  email       String
+  phone       String
+
+  // Recruitment conditions
+  recruitmentModel     String
+  sponsorship          String?
+  accommodation        String
+  transport            String?
+  workingHours         String
+  weeklyOff            String?
+  additionalConditions String? @db.Text
+
+  // Employer declaration
+  declaration Boolean @default(false)
+
+  // Internal admin management
+  status     EmployerEnquiryStatus @default(NEW)
+  adminNotes String?               @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Each employer enquiry can contain multiple hiring requirements
+  requirements EmployerHiringRequirement[]
+
+  @@index([email])
+  @@index([status, createdAt])
+  @@index([companyName])
+}
+
+model EmployerHiringRequirement {
+  id String @id @default(cuid())
+
+  hiringMarket       String
+  destinationCountry String?
+  industry           String
+  jobRole            String
+  vacancies          Int
+  qualification      String?
+  experience         String?
+  salary             String
+  jobLocation        String
+  employmentType     String
+  contractDuration   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employerEnquiryId String
+  employerEnquiry   EmployerEnquiry @relation(fields: [employerEnquiryId], references: [id], onDelete: Cascade)
+
+  @@index([employerEnquiryId])
+  @@index([jobRole])
 }

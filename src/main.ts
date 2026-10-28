@@ -13,7 +13,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'https://new-nleta-website.vercel.app',
-      'http://localhost:3000',
+      'http://localhost:3000', 
+      'http://localhost:3001', 
       'https://nleta.org.in',
       'https://www.nleta.org.in',
     ],

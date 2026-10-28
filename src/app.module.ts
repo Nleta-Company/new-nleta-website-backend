@@ -9,6 +9,7 @@ import { AdminAuthModule } from './admin-auth/admin-auth.module.js';
 import { ComplaintsModule } from './complaints/complaints.module.js';
 import { IncidentReportsModule } from './incident-reports/incident-reports.module.js';
 import { AccidentalReportsModule } from './accidental-reports/accidental-reports.module.js';
+import { EmployerEnquiriesModule } from './employer-enquiries/employer-enquiries.module.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AccidentalReportsModule } from './accidental-reports/accidental-reports
     IncidentReportsModule,
     GalleryModule,
     AccidentalReportsModule,
+    EmployerEnquiriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
