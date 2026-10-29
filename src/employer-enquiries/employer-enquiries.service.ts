@@ -2,10 +2,12 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { EmployerEnquiryStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { EmployerEnquiryEmailService } from './employer-enquiry-email.service.js';
 
 export interface HiringRequirementInput {
   hiringMarket: string;
@@ -48,7 +50,12 @@ export interface CreateEmployerEnquiryInput {
 
 @Injectable()
 export class EmployerEnquiriesService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(EmployerEnquiriesService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly employerEnquiryEmailService: EmployerEnquiryEmailService,
+  ) {}
 
   private requiredString(value: unknown, field: string): string {
     if (typeof value !== 'string' || !value.trim()) {
@@ -109,19 +116,13 @@ export class EmployerEnquiriesService {
         item.contractDuration,
       );
 
-      if (
-        hiringMarket === 'International' &&
-        !destinationCountry
-      ) {
+      if (hiringMarket === 'International' && !destinationCountry) {
         throw new BadRequestException(
           `Requirement ${index + 1}: destination country is required.`,
         );
       }
 
-      if (
-        employmentType === 'Contract' &&
-        !contractDuration
-      ) {
+      if (employmentType === 'Contract' && !contractDuration) {
         throw new BadRequestException(
           `Requirement ${index + 1}: contract duration is required.`,
         );
@@ -174,7 +175,8 @@ export class EmployerEnquiriesService {
       );
     }
 
-    return this.prisma.employerEnquiry.create({
+    // Step 1: Save the enquiry and hiring requirements in the database.
+    const created = await this.prisma.employerEnquiry.create({
       data: {
         companyName: this.requiredString(
           input.companyName,
@@ -190,7 +192,6 @@ export class EmployerEnquiriesService {
         address: this.optionalString(input.address),
         website: this.optionalString(input.website),
 
-        // GST No. / Registration No.
         gstRegistrationNumber: this.optionalString(
           input.gstRegistrationNumber,
         ),
@@ -233,6 +234,25 @@ export class EmployerEnquiriesService {
         requirements: true,
       },
     });
+
+    // Step 2: Send admin and employer emails after saving.
+    // Email failure must not fail the saved enquiry.
+    try {
+      await this.employerEnquiryEmailService
+        .sendEmployerEnquiryNotifications(created);
+
+      this.logger.log(
+        `Employer enquiry ${created.id} saved; email notification process completed.`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Employer enquiry ${created.id} saved, but email notification failed.`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+
+    // Step 3: Return the saved enquiry to the frontend.
+    return created;
   }
 
   async findAll(status?: string) {
@@ -298,16 +318,11 @@ export class EmployerEnquiriesService {
     });
   }
 
-  
   async delete(id: string) {
-    // Confirm that the enquiry exists before deleting it.
     await this.findOne(id);
 
-    // Related requirements are deleted automatically through
-    // the Prisma onDelete: Cascade relationship.
     return this.prisma.employerEnquiry.delete({
       where: { id },
     });
   }
-
 }

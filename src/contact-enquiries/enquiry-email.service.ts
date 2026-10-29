@@ -1,7 +1,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import nodemailer, { type Transporter } from 'nodemailer';
+import { Resend } from 'resend';
 
 type EnquiryEmailData = {
   id: string;
@@ -65,15 +65,12 @@ function formatIST(date: Date): string {
 @Injectable()
 export class EnquiryEmailService {
   private readonly logger = new Logger(EnquiryEmailService.name);
-  private readonly transporter: Transporter | null;
+  private readonly resend: Resend | null;
   private readonly from: string;
   private readonly adminEmail: string;
 
   constructor(private readonly config: ConfigService) {
-    const host = config.get<string>('SMTP_HOST');
-    const port = Number(config.get<string>('SMTP_PORT') ?? '587');
-    const user = config.get<string>('SMTP_USER');
-    const pass = config.get<string>('SMTP_PASS');
+    const apiKey = config.get<string>('RESEND_API_KEY');
 
     this.from =
       config.get<string>('EMAIL_FROM') ??
@@ -83,37 +80,21 @@ export class EnquiryEmailService {
       config.get<string>('ADMIN_NOTIFICATION_EMAIL') ??
       'info@nleta.org.in';
 
-    if (!host || !user || !pass || !Number.isFinite(port)) {
+    if (!apiKey) {
       this.logger.error(
-        'SMTP configuration is incomplete. Email notifications are disabled.',
+        'RESEND_API_KEY is missing. Email notifications are disabled.',
       );
-      this.transporter = null;
+      this.resend = null;
       return;
     }
 
-    this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      requireTLS: port === 587,
-      auth: { user, pass },
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 20000,
-    });
+    this.resend = new Resend(apiKey);
   }
 
-  // Existing Contact Enquiry notifications - preserved.
+  // Contact Enquiry notifications
   async sendEnquiryNotifications(
     enquiry: EnquiryEmailData,
   ): Promise<void> {
-    if (!this.transporter) {
-      this.logger.error(
-        'Cannot send enquiry emails: SMTP is not configured.',
-      );
-      return;
-    }
-
     const name = escapeHtml(enquiry.name);
     const email = escapeHtml(enquiry.email);
     const organization = escapeHtml(
@@ -174,6 +155,7 @@ export class EnquiryEmailService {
     ]);
   }
 
+  // Complaint notifications
   async sendComplaintNotifications(
     complaint: ComplaintEmailData,
   ): Promise<void> {
@@ -181,7 +163,10 @@ export class EnquiryEmailService {
     const email = escapeHtml(complaint.email);
     const reference = escapeHtml(complaint.referenceNumber);
     const subject = escapeHtml(complaint.subject);
-    const description = escapeHtml(complaint.description).replace(/\n/g, '<br>');
+    const description = escapeHtml(complaint.description).replace(
+      /\n/g,
+      '<br>',
+    );
     const date = formatIST(complaint.createdAt);
 
     const evidence = complaint.evidence.length
@@ -234,13 +219,17 @@ export class EnquiryEmailService {
     ]);
   }
 
+  // Incident report notifications
   async sendIncidentNotifications(
     incident: IncidentEmailData,
   ): Promise<void> {
     const name = escapeHtml(incident.reporterName);
     const email = escapeHtml(incident.reporterEmail);
     const reference = escapeHtml(incident.referenceNumber);
-    const description = escapeHtml(incident.description).replace(/\n/g, '<br>');
+    const description = escapeHtml(incident.description).replace(
+      /\n/g,
+      '<br>',
+    );
     const date = formatIST(incident.createdAt);
     const incidentDate = formatIST(incident.incidentDate);
 
@@ -298,6 +287,7 @@ export class EnquiryEmailService {
     ]);
   }
 
+  // Shared Resend email sender
   private async sendOneEmail(
     label: string,
     to: string,
@@ -305,13 +295,15 @@ export class EnquiryEmailService {
     html: string,
     replyTo?: string,
   ): Promise<void> {
-    if (!this.transporter) {
-      this.logger.error(`Cannot send ${label}: SMTP is not configured.`);
+    if (!this.resend) {
+      this.logger.error(
+        `Cannot send ${label}: Resend is not configured.`,
+      );
       return;
     }
 
     try {
-      const info = await this.transporter.sendMail({
+      const { data, error } = await this.resend.emails.send({
         from: this.from,
         to,
         subject,
@@ -319,12 +311,19 @@ export class EnquiryEmailService {
         ...(replyTo ? { replyTo } : {}),
       });
 
+      if (error) {
+        this.logger.error(
+          `Resend ${label} failed: ${error.message}`,
+        );
+        return;
+      }
+
       this.logger.log(
-        `SMTP accepted ${label}. Message ID: ${info.messageId}`,
+        `Resend accepted ${label}. Message ID: ${data?.id ?? 'unknown'}`,
       );
     } catch (error) {
       this.logger.error(
-        `SMTP ${label} failed: ${
+        `Resend ${label} failed: ${
           error instanceof Error ? error.message : 'Unknown error'
         }`,
       );
