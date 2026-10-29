@@ -4,9 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  EmployerEnquiryStatus,
-} from '@prisma/client';
+import { EmployerEnquiryStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 export interface HiringRequirementInput {
@@ -31,6 +29,7 @@ export interface CreateEmployerEnquiryInput {
   city: string;
   address?: string | null;
   website?: string | null;
+  gstRegistrationNumber?: string | null;
   agencyLicence?: string | null;
   contactName: string;
   designation: string;
@@ -170,7 +169,9 @@ export class EmployerEnquiriesService {
     const email = this.requiredString(input.email, 'Email').toLowerCase();
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      throw new BadRequestException('Please provide a valid email address.');
+      throw new BadRequestException(
+        'Please provide a valid email address.',
+      );
     }
 
     return this.prisma.employerEnquiry.create({
@@ -188,6 +189,12 @@ export class EmployerEnquiriesService {
         city: this.requiredString(input.city, 'City'),
         address: this.optionalString(input.address),
         website: this.optionalString(input.website),
+
+        // GST No. / Registration No.
+        gstRegistrationNumber: this.optionalString(
+          input.gstRegistrationNumber,
+        ),
+
         agencyLicence: this.optionalString(input.agencyLicence),
         contactName: this.requiredString(
           input.contactName,

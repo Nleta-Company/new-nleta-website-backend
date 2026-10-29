@@ -195,6 +195,7 @@ model EmployerEnquiry {
   city          String
   address       String?
   website       String?
+  gstRegistrationNumber String?
   agencyLicence String? @db.Text
 
   // Contact person
