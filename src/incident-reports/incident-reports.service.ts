@@ -705,9 +705,6 @@ export class IncidentReportsService {
       },
 
     });
-
-
-
     return {
 
       success: true,
@@ -719,5 +716,51 @@ export class IncidentReportsService {
     };
 
   }
+
+  
+  // Admin-only deletion of the selected incident report.
+  async adminDelete(id: string) {
+    if (!id?.trim()) {
+      throw new BadRequestException('Incident report ID is required.');
+    }
+
+    const existing = await this.prisma.incidentReport.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        referenceNumber: true,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Incident report not found.');
+    }
+
+    // Remove linked evidence metadata and the report in one transaction.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.incidentReport.update({
+        where: { id },
+        data: {
+          evidence: {
+            deleteMany: {},
+          },
+        },
+      });
+
+      await tx.incidentReport.delete({
+        where: { id },
+      });
+    });
+
+    return {
+      success: true,
+      message: 'Incident report deleted successfully.',
+      data: {
+        id: existing.id,
+        referenceNumber: existing.referenceNumber,
+      },
+    };
+  }
+
 
 }

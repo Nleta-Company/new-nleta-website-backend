@@ -134,7 +134,6 @@ export class ComplaintsService {
   }
 
   // Admin-only evidence retrieval.
-  // The evidence must belong to an existing complaint.
   async getEvidence(evidenceId: string) {
     if (!evidenceId?.trim()) {
       throw new BadRequestException('Evidence ID is required.');
@@ -195,9 +194,24 @@ export class ComplaintsService {
                   mode: 'insensitive' as const,
                 },
               },
-              { name: { contains: term, mode: 'insensitive' as const } },
-              { email: { contains: term, mode: 'insensitive' as const } },
-              { subject: { contains: term, mode: 'insensitive' as const } },
+              {
+                name: {
+                  contains: term,
+                  mode: 'insensitive' as const,
+                },
+              },
+              {
+                email: {
+                  contains: term,
+                  mode: 'insensitive' as const,
+                },
+              },
+              {
+                subject: {
+                  contains: term,
+                  mode: 'insensitive' as const,
+                },
+              },
               {
                 organization: {
                   contains: term,
@@ -312,6 +326,40 @@ export class ComplaintsService {
       success: true,
       message: 'Complaint updated successfully.',
       data,
+    };
+  }
+
+  // Admin-only deletion of a selected complaint.
+  async adminDelete(id: string) {
+    if (!id?.trim()) {
+      throw new BadRequestException('Complaint ID is required.');
+    }
+
+    const existing = await this.prisma.complaint.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        referenceNumber: true,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Complaint not found.');
+    }
+
+    // This deletion requires the database relation to permit
+    // deleting a complaint that has linked evidence records.
+    await this.prisma.complaint.delete({
+      where: { id },
+    });
+
+    return {
+      success: true,
+      message: 'Complaint deleted successfully.',
+      data: {
+        id: existing.id,
+        referenceNumber: existing.referenceNumber,
+      },
     };
   }
 }

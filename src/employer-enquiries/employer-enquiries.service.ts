@@ -297,4 +297,17 @@ export class EmployerEnquiriesService {
       include: { requirements: true },
     });
   }
+
+  
+  async delete(id: string) {
+    // Confirm that the enquiry exists before deleting it.
+    await this.findOne(id);
+
+    // Related requirements are deleted automatically through
+    // the Prisma onDelete: Cascade relationship.
+    return this.prisma.employerEnquiry.delete({
+      where: { id },
+    });
+  }
+
 }

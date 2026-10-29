@@ -2,6 +2,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -9,6 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+
 import { AdminAuthGuard } from '../admin-auth/admin-auth.guard.js';
 import type { CreateEmployerEnquiryInput } from './employer-enquiries.service.js';
 import { EmployerEnquiriesService } from './employer-enquiries.service.js';
@@ -25,19 +27,21 @@ export class EmployerEnquiriesController {
     return this.employerEnquiriesService.create(body);
   }
 
-  // The following endpoints require an authenticated admin.
+  // Admin-only: get all employer enquiries.
   @Get()
   @UseGuards(AdminAuthGuard)
   findAll(@Query('status') status?: string) {
     return this.employerEnquiriesService.findAll(status);
   }
 
+  // Admin-only: get one employer enquiry.
   @Get(':id')
   @UseGuards(AdminAuthGuard)
   findOne(@Param('id') id: string) {
     return this.employerEnquiriesService.findOne(id);
   }
 
+  // Admin-only: update enquiry status and notes.
   @Patch(':id/status')
   @UseGuards(AdminAuthGuard)
   updateStatus(
@@ -53,5 +57,12 @@ export class EmployerEnquiriesController {
       body.status,
       body.adminNotes,
     );
+  }
+
+  // Admin-only: delete the selected employer enquiry.
+  @Delete(':id')
+  @UseGuards(AdminAuthGuard)
+  delete(@Param('id') id: string) {
+    return this.employerEnquiriesService.delete(id);
   }
 }

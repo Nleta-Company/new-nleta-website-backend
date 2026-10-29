@@ -2,6 +2,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -60,7 +61,33 @@ export class ContactEnquiriesController {
         ),
       };
     } catch (error) {
-      // Prisma P2025 means the requested record was not found.
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException('Enquiry not found');
+      }
+
+      throw error;
+    }
+  }
+
+  // Protected endpoint: delete selected enquiry
+  @Delete(':id')
+  @UseGuards(AdminAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async delete(@Param('id') id: string) {
+    try {
+      const data = await this.contactEnquiriesService.delete(id);
+
+      return {
+        success: true,
+        message: 'Enquiry deleted successfully',
+        data,
+      };
+    } catch (error) {
       if (
         typeof error === 'object' &&
         error !== null &&

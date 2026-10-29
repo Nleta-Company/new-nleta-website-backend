@@ -1,6 +1,4 @@
-
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { EnquiryEmailService } from './enquiry-email.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateContactEnquiryDto } from './dto/create-contact-enquiry.dto.js';
@@ -13,8 +11,6 @@ export class ContactEnquiriesService {
         private readonly prisma: PrismaService,
         private readonly enquiryEmailService: EnquiryEmailService,
     ) { }
-
-    // Save a new enquiry submitted through the public website form
 
     // Save a new enquiry submitted through the public website form
     async create(dto: CreateContactEnquiryDto) {
@@ -37,8 +33,10 @@ export class ContactEnquiriesService {
         try {
             await this.enquiryEmailService.sendEnquiryNotifications(enquiry);
         } catch (error) {
-            // Log the error without exposing internal details to the visitor.
-            console.error('Failed to trigger enquiry email notifications:', error);
+            console.error(
+                'Failed to trigger enquiry email notifications:',
+                error,
+            );
         }
 
         return {
@@ -51,19 +49,28 @@ export class ContactEnquiriesService {
         };
     }
 
-
     // List enquiries with optional search and status filters
     async findAll(search?: string, status?: string) {
         const where = {
             status:
                 status && ['NEW', 'IN_PROGRESS', 'RESOLVED'].includes(status)
-                    ? (status as 'NEW' | 'IN_PROGRESS' | 'RESOLVED')
+                    ? (status as EnquiryStatus)
                     : undefined,
             ...(search?.trim()
                 ? {
                     OR: [
-                        { name: { contains: search.trim(), mode: 'insensitive' as const } },
-                        { email: { contains: search.trim(), mode: 'insensitive' as const } },
+                        {
+                            name: {
+                                contains: search.trim(),
+                                mode: 'insensitive' as const,
+                            },
+                        },
+                        {
+                            email: {
+                                contains: search.trim(),
+                                mode: 'insensitive' as const,
+                            },
+                        },
                         {
                             organization: {
                                 contains: search.trim(),
@@ -74,20 +81,6 @@ export class ContactEnquiriesService {
                 }
                 : {}),
         };
-
-        if (status && ['NEW', 'IN_PROGRESS', 'RESOLVED'].includes(status)) {
-            where.status = status as EnquiryStatus;
-        }
-
-        const term = search?.trim();
-
-        if (term) {
-            where.OR = [
-                { name: { contains: term, mode: 'insensitive' } },
-                { email: { contains: term, mode: 'insensitive' } },
-                { organization: { contains: term, mode: 'insensitive' } },
-            ];
-        }
 
         const [data, total] = await Promise.all([
             this.prisma.contactEnquiry.findMany({
@@ -114,6 +107,13 @@ export class ContactEnquiriesService {
                 status: true,
                 updatedAt: true,
             },
+        });
+    }
+
+    // Delete only the selected contact enquiry
+    async delete(id: string) {
+        return this.prisma.contactEnquiry.delete({
+            where: { id },
         });
     }
 }

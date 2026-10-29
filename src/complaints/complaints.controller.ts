@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -79,8 +80,6 @@ export class ComplaintsController {
   }
 
   // Admin-only evidence viewing.
-  // The service must verify the evidence ID in the database
-  // before returning the stored file.
   @Get('evidence/:evidenceId')
   @UseGuards(AdminAuthGuard)
   async viewEvidence(
@@ -109,5 +108,13 @@ export class ComplaintsController {
     @Body() body: { status?: string; adminNotes?: string },
   ) {
     return this.complaintsService.adminUpdate(id, body);
+  }
+
+  // Admin-only deletion of a selected complaint.
+  @Delete(':id')
+  @UseGuards(AdminAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  deleteComplaint(@Param('id') id: string) {
+    return this.complaintsService.adminDelete(id);
   }
 }
