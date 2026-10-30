@@ -10,6 +10,7 @@ import { ComplaintsModule } from './complaints/complaints.module.js';
 import { IncidentReportsModule } from './incident-reports/incident-reports.module.js';
 import { AccidentalReportsModule } from './accidental-reports/accidental-reports.module.js';
 import { EmployerEnquiriesModule } from './employer-enquiries/employer-enquiries.module.js';
+import { CandidatesModule } from './candidates/candidates.module.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { EmployerEnquiriesModule } from './employer-enquiries/employer-enquiries
     GalleryModule,
     AccidentalReportsModule,
     EmployerEnquiriesModule,
+    CandidatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

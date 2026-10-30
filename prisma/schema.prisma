@@ -256,3 +256,57 @@ model EmployerHiringRequirement {
   @@index([employerEnquiryId])
   @@index([jobRole])
 }
+
+
+
+enum CandidateRegistrationStatus {
+  NEW
+  REVIEWING
+  SHORTLISTED
+  CONTACTED
+  HIRED
+  REJECTED
+}
+
+model Candidate {
+  id              String   @id @default(cuid())
+  referenceNumber String   @unique @default(cuid())
+
+  // Personal details
+  fullName String
+  email    String
+  phone    String
+  city     String
+  country  String   @default("India")
+
+  // Education and experience
+  qualification   String
+  experienceLevel String
+  skills          String?  @db.Text
+
+  // Job preferences
+  preferredRole     String
+  hiringMarket      String
+  destinationCountry String?
+
+  // Employment details
+  expectedSalary String?
+  noticePeriod   String?
+  availability   String?
+
+  // Consent
+  consent Boolean @default(false)
+
+  // Admin management
+  status     CandidateRegistrationStatus @default(NEW)
+  adminNotes String?                     @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([status, createdAt])
+  @@index([preferredRole])
+  @@index([hiringMarket])
+}
